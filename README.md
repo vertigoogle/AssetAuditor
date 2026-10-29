@@ -6,35 +6,49 @@ Asset Auditor is a module for [Foundry Virtual Tabletop](https://foundryvtt.com/
 
 ## Usage
 
-Once you have enabled the module for a world, the settings tab contains an "Asset Filepaths" button.
+Enable the module and open **Asset Filepaths** from the Settings sidebar. The audit
+window uses Foundry's ApplicationV2 frame, with a resizable layout, fixed tools and
+a separately scrolling result list.
 
-![Settings Tab](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/settings-tab.png)
+The window opens before scanning starts. Progress reports directory listing, asset
+checking and locating valid parent directories as separate stages. Completion is
+explicit, including zero-result scans. Use **Recheck** to run the scan again.
 
-It opens a list of all assets, sorted by type and name.
+### Results and navigation
 
-![Asset Filepaths](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/asset-filepaths.png)
+Entries are organized by document type and exact file path. Repeated paths are
+collapsed into groups of usages; expand one to edit an individual reference. Scene,
+actor, playlist and journal labels distinguish otherwise identical names. The
+**Open original** button opens the related document or configuration. Navigating
+to a placed token does not switch or activate its scene.
 
-Any assets whose paths could not be located are marked by red color and a different icon. Furthermore, the last path in the directory tree that could be validated is displayed below it, to ease locating the problem.
+Missing paths show a warning icon and the last valid parent directory. Enable
+**Show only invalid filepaths** to focus on unresolved references. User Data and
+Core Data are both checked. Wildcard patterns show their number of distinct matching
+file URLs; a pattern with no matches is invalid.
 
-Online resources, i.e. paths beginning with "http://" or "https://" are also checked for validity, but only on the domain level. Checking if the complete URL is valid is prevented by Foundry's CORS policy.
+### Repairing paths
 
-Klicking the browse button opens a file browser. In case of invalid paths it opens it at the last valid path.
+Choosing a file in the browser **saves immediately**. Typing a path manually enables
+**Save** and **Reset** for that row. A successful save is followed by a fresh check;
+valid entries leave the invalid-only list and their usage count updates.
 
-Alternatively, the path can be edited in place. It can then either be reset or saved by the corresponding icons.
+For wildcard token paths, selecting a single file replaces the pattern. A warning
+explains this before the picker opens. To preserve random image selection, edit the
+folder or pattern manually. Auditing itself does not change the random-image flag.
 
-![Invalid Path edited](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/invalid-path-edited.png)
+Use **Search** to filter by document name, path or parent name. Search runs when
+its button or Enter is pressed. **Replace all** operates on the current result set;
+back up your world before making bulk changes. An empty search does not perform a
+replacement. A stopped replacement may have already saved earlier entries; recheck
+before retrying.
 
-At the top of the window is an input field for searching and replacing. The search is not performed before either clicking the search button or hitting the enter key. The same is true for replacing all occurences of the search term. Both fields can be cleared by the clear button, or by hitting escape.
+The existing setting to audit on world startup remains available. External URLs
+retain a best-effort reachability check; cross-origin restrictions prevent this
+from proving that an individual remote file exists.
 
-![Search and Replace](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/search-and-replace.png)
-
-The checkbox at the top allows to display only assets with an invalid path.
-
-![Only invalid Assets](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/only-invalid.png)
-
-In the module settings a checkbox can be ticked to run a check of all asset filepaths on every startup and display an error message if some paths are not valid.
-
-![Module Settings](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/module-settings.png)
+See [Testing](docs/testing.md) for automated checks, the pending in-Foundry checklist
+and the exact scope of the supported paths.
 
 ## Contributing
 

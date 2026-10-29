@@ -16,5 +16,18 @@
     "foundry-vtt",
     "foundryvtt",
     "module"
-  ]
+  ],
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node --check src/apps/asset-filepaths.js && node --check src/apps/asset-groups.js && node --check src/apps/asset-original.js && node --check src/scripts/asset-aggregation.js && node --check src/scripts/asset-identity.js && node --check src/scripts/main.js"
+  },
+  "engines": {
+    "node": ">=24.15"
+  },
+  "devDependencies": {
+    "handlebars": "^4.7.10",
+    "jquery": "^3.7.1",
+    "jsdom": "^30.1.3"
+  }
 }
