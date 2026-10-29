@@ -1,8 +1,37 @@
 # Asset Auditor
 
-## About
+## Development fork
 
-Asset Auditor is a module for [Foundry Virtual Tabletop](https://foundryvtt.com/). The idea arose because I kept wondering why my music playlists would stop playing all the time. At some point I noticed that they do so once they try to load a file that doesn't exists. Checking all files by hand is a pain, though. So here we are.
+This is [vertigoogle's development fork](https://github.com/vertigoogle/AssetAuditor)
+of [Asset Auditor by The Comamba](https://github.com/TheComamba/AssetAuditor).
+The original module finds broken asset references in Foundry Virtual Tabletop.
+This fork prepares improvements to path validation, repair workflows and the audit
+window for Foundry v14.
+
+**Development status:** the improvements below are on
+[`improve-asset-auditing-v14`](https://github.com/vertigoogle/AssetAuditor/tree/improve-asset-auditing-v14),
+with [draft pull request #1](https://github.com/vertigoogle/AssetAuditor/pull/1)
+tracking the contribution. The default `main` branch still contains the original
+module code; this README is the fork's development overview. There is no fork
+release yet, and no pull request has been submitted upstream.
+
+### Improvements in the draft
+
+- Resizable ApplicationV2 window, fixed tools and separately scrolling results.
+- Visible scan stages, progress counters and explicit completion or failure states.
+- Validation against both User Data and Core Data, including wildcard match counts.
+- Grouped file usages with scene/parent labels and navigation to the original object.
+- Automatic saving after file selection, fresh validation and removal of repaired
+  entries from the invalid-only result without losing unrelated draft edits.
+- Parent-qualified embedded-document identities and actor-owned prototype writes.
+- Stale-picker protection, deferred rescans during writes and explicit error recovery.
+- English and German localization, 22 automated tests and GitHub Actions checks.
+
+The automated checks pass. **Native Foundry UI and interoperability validation are
+still pending**, so this remains a draft rather than a production release. See the
+[testing guide and manual checklist](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md).
+Tokenizer is optional; this fork does not introduce a Tokenizer dependency or claim
+to audit its editing layers, caches or dynamic-ring subject fields.
 
 ## Usage
 
@@ -47,26 +76,48 @@ The existing setting to audit on world startup remains available. External URLs
 retain a best-effort reachability check; cross-origin restrictions prevent this
 from proving that an individual remote file exists.
 
-See [Testing](docs/testing.md) for automated checks, the pending in-Foundry checklist
+See [Testing](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md) for automated checks, the pending in-Foundry checklist
 and the exact scope of the supported paths.
 
 ## Contributing
 
-Asset Auditor is very close to feature complete in my opinion. If you disagree, either because you are missing some functionality, because I have overlooked an asset type, or because you suspect a bug, please let me know by [creating an issue](https://github.com/TheComamba/AssetAuditor/issues). Also have a look at the existing issues and let me know if you want me to prioritize one of them.
+For feedback on these changes, use the
+[draft pull request](https://github.com/vertigoogle/AssetAuditor/pull/1).
+The upstream project is [TheComamba/AssetAuditor](https://github.com/TheComamba/AssetAuditor);
+its author and MIT license are retained. An upstream submission can follow after
+review and the pending in-Foundry validation.
 
-I am also open to pull requests.
+To run the development checks, use Node.js 24.15 or newer:
 
-If you want to add a new language, add a file called `src/lang/<new-lang>.json`, where `<new-lang>` is the corresponding [two-letter ISO 639-1 language code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). In `src/module.json`, add a new entry in the `"languages"` array. Running `foundry_scripts/check_localizations_consistency.sh` will list all keys that are not translated into your language. It will also discover some typos.
-
-## Manual Installation
-
-To manually install Asset Auditor (e.g. for development), copy the src/ folder of this repository to the {userData}/Data/modules/ folder of Foundry, and then rename it to 'asset-auditor' (the id declared in module.json).
-
-On POSIX compliant operating systems like Linux and Mac you can alternatively use a symbolic link. It can be created via e.g.
-
-```bash
-ln -s {folder containing git repo}/AssetAuditor/src {Foundry user data}/Data/modules/asset-auditor
+```sh
+npm ci --ignore-scripts
+npm test
+npm run check
 ```
+
+To add a language, create `src/lang/<language-code>.json` and register it in
+`src/module.json`. Keep localization keys and placeholders consistent with the
+English source. The upstream `foundry_scripts/check_localizations_consistency.sh`
+check is also run by CI.
+
+## Trying the development version
+
+Use a disposable Foundry world and back up your data first.
+
+1. Check out the
+   [`improve-asset-auditing-v14` branch](https://github.com/vertigoogle/AssetAuditor/tree/improve-asset-auditing-v14).
+2. Copy **the contents of `src/`** into
+   `<Foundry User Data>/Data/modules/asset-auditor/`.
+3. Restart Foundry to reload the module manifest, enable Asset Auditor in the test
+   world, and reload the browser.
+4. Follow the
+   [manual test checklist](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md).
+
+`node_modules/`, tests and other development files do not belong in the installed
+module folder. The manifest version and upstream manifest/download URLs are
+intentionally unchanged for maintainer-controlled release management. **Do not
+use those URLs expecting to install this fork's draft**, and be aware that an
+ordinary module update can replace a manually installed development copy.
 
 ## License
 
