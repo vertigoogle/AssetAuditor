@@ -4,12 +4,6 @@ Asset Auditor helps Foundry Virtual Tabletop GMs find and repair broken referenc
 to images, maps and audio. It brings file validation, document navigation and path
 editing into one overview, making asset reorganizations easier to review.
 
-This is [vertigoogle's development fork](https://github.com/vertigoogle/AssetAuditor)
-of [Asset Auditor by The Comamba](https://github.com/TheComamba/AssetAuditor).
-The Foundry v14 improvements are available on
-[`improve-asset-auditing-v14`](https://github.com/vertigoogle/AssetAuditor/tree/improve-asset-auditing-v14)
-and are being reviewed in [draft pull request #1](https://github.com/vertigoogle/AssetAuditor/pull/1).
-
 ## Features
 
 - **Clear audit overview:** a resizable ApplicationV2 window with fixed tools and
@@ -64,18 +58,31 @@ button or Enter. **Replace all** applies the replacement to the current result s
 when a search term is provided. Back up the world before bulk changes. If a
 replacement stops partway through, use **Recheck** to review the saved results.
 
-The module also offers an audit-on-startup setting and best-effort reachability
-checks for external URLs.
+Both input fields can be cleared with their clear button or Escape. Enter in the
+replacement field runs the replacement, just as its button does.
+
+### Check paths when the world starts
+
+Open **Game Settings → Configure Settings → Module Settings**, find Asset Auditor
+and enable **Run asset audit on startup**. Each world startup then runs an audit
+and displays an error notification with the number of invalid references found.
+
+### External URLs
+
+Paths beginning with `http://` or `https://` receive a best-effort network
+reachability check, cached by origin. Browser cross-origin restrictions make this
+a domain-level indicator; the local file checks use the directory listings from
+User Data and Core Data.
 
 ## Development and validation
 
-The draft includes **22 passing automated tests** and GitHub Actions checks for
-module behavior, syntax, version consistency and localization. The tests import
+Automated tests and GitHub Actions cover module behavior, syntax, version
+consistency and localization. The tests import
 the actual ES modules and exercise the Handlebars template and DOM handlers in
 jsdom with simulated Foundry APIs.
 
-The [testing guide](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md)
-tracks native Foundry validation and provides reproducible manual test cases.
+The [testing guide](docs/testing.md) describes the test environment and provides
+reproducible in-Foundry checks.
 
 Use Node.js 24.15 or newer to run the development checks:
 
@@ -85,32 +92,46 @@ npm test
 npm run check
 ```
 
-## Trying the development version
+## Manual installation
 
-Use a test world and back up your data first.
+The `src/` directory contains the installable module. For a development checkout,
+use a test world and back up your data first.
 
-1. Check out the
-   [`improve-asset-auditing-v14` branch](https://github.com/vertigoogle/AssetAuditor/tree/improve-asset-auditing-v14).
+1. Clone or download this repository and check out the revision you want to test.
 2. Copy **the contents of `src/`** into
    `<Foundry User Data>/Data/modules/asset-auditor/`.
-3. Restart Foundry, enable Asset Auditor in the test world and reload the browser.
-4. Follow the
-   [manual test checklist](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md).
+3. Restart Foundry, enable Asset Auditor in the world and reload the browser.
+4. Open **Asset Filepaths** or follow the [manual test checklist](docs/testing.md).
 
-The `src/` directory is the installable module payload. This branch is distributed
-as a development source checkout; release packaging is coordinated with the
-upstream maintainer.
+### Symbolic link on Linux and macOS
+
+For development, a symbolic link lets Foundry use the source directory directly:
+
+```sh
+ln -s "/path/to/AssetAuditor/src" "/path/to/FoundryUserData/Data/modules/asset-auditor"
+```
+
+Replace both paths with your local locations. The destination directory must be
+available for the link. Restart Foundry after creating it.
 
 ## Contributing
 
-Feedback and review are welcome in the
-[draft pull request](https://github.com/vertigoogle/AssetAuditor/pull/1).
+Bug reports, feature requests and pull requests are welcome. Check the existing
+[issues](https://github.com/TheComamba/AssetAuditor/issues) before opening a report
+and include reproduction steps, the Foundry version and the affected document type.
 
-To add a language, create `src/lang/<language-code>.json` and register it in
-`src/module.json`. Match the English localization keys and interpolation
-placeholders. CI runs the upstream localization consistency check.
+To add a language, create `src/lang/<language-code>.json` using its
+[two-letter ISO 639-1 code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+and register it in `src/module.json`. Match the English localization keys and
+interpolation placeholders. Run the consistency check used by CI:
+
+```sh
+./foundry_scripts/check_localizations_consistency.sh
+```
+
+The helper scripts are provided by the repository's `foundry_scripts` submodule.
 
 ## License and attribution
 
 Asset Auditor was created by [The Comamba](https://github.com/TheComamba/AssetAuditor).
-This fork continues the project under its [MIT license](LICENSE).
+The project is distributed under the [MIT license](LICENSE).
