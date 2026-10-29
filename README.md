@@ -1,58 +1,123 @@
 # Asset Auditor
 
-## About
+## Development fork
 
-Asset Auditor is a module for [Foundry Virtual Tabletop](https://foundryvtt.com/). The idea arose because I kept wondering why my music playlists would stop playing all the time. At some point I noticed that they do so once they try to load a file that doesn't exists. Checking all files by hand is a pain, though. So here we are.
+This is [vertigoogle's development fork](https://github.com/vertigoogle/AssetAuditor)
+of [Asset Auditor by The Comamba](https://github.com/TheComamba/AssetAuditor).
+The original module finds broken asset references in Foundry Virtual Tabletop.
+This fork prepares improvements to path validation, repair workflows and the audit
+window for Foundry v14.
+
+**Development status:** the improvements below are on
+[`improve-asset-auditing-v14`](https://github.com/vertigoogle/AssetAuditor/tree/improve-asset-auditing-v14),
+with [draft pull request #1](https://github.com/vertigoogle/AssetAuditor/pull/1)
+tracking the contribution. The default `main` branch still contains the original
+module code; this README is the fork's development overview. There is no fork
+release yet, and no pull request has been submitted upstream.
+
+### Improvements in the draft
+
+- Resizable ApplicationV2 window, fixed tools and separately scrolling results.
+- Visible scan stages, progress counters and explicit completion or failure states.
+- Validation against both User Data and Core Data, including wildcard match counts.
+- Grouped file usages with scene/parent labels and navigation to the original object.
+- Automatic saving after file selection, fresh validation and removal of repaired
+  entries from the invalid-only result without losing unrelated draft edits.
+- Parent-qualified embedded-document identities and actor-owned prototype writes.
+- Stale-picker protection, deferred rescans during writes and explicit error recovery.
+- English and German localization, 22 automated tests and GitHub Actions checks.
+
+The automated checks pass. **Native Foundry UI and interoperability validation are
+still pending**, so this remains a draft rather than a production release. See the
+[testing guide and manual checklist](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md).
+Tokenizer is optional; this fork does not introduce a Tokenizer dependency or claim
+to audit its editing layers, caches or dynamic-ring subject fields.
 
 ## Usage
 
-Once you have enabled the module for a world, the settings tab contains an "Asset Filepaths" button.
+Enable the module and open **Asset Filepaths** from the Settings sidebar. The audit
+window uses Foundry's ApplicationV2 frame, with a resizable layout, fixed tools and
+a separately scrolling result list.
 
-![Settings Tab](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/settings-tab.png)
+The window opens before scanning starts. Progress reports directory listing, asset
+checking and locating valid parent directories as separate stages. Completion is
+explicit, including zero-result scans. Use **Recheck** to run the scan again.
 
-It opens a list of all assets, sorted by type and name.
+### Results and navigation
 
-![Asset Filepaths](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/asset-filepaths.png)
+Entries are organized by document type and exact file path. Repeated paths are
+collapsed into groups of usages; expand one to edit an individual reference. Scene,
+actor, playlist and journal labels distinguish otherwise identical names. The
+**Open original** button opens the related document or configuration. Navigating
+to a placed token does not switch or activate its scene.
 
-Any assets whose paths could not be located are marked by red color and a different icon. Furthermore, the last path in the directory tree that could be validated is displayed below it, to ease locating the problem.
+Missing paths show a warning icon and the last valid parent directory. Enable
+**Show only invalid filepaths** to focus on unresolved references. User Data and
+Core Data are both checked. Wildcard patterns show their number of distinct matching
+file URLs; a pattern with no matches is invalid.
 
-Online resources, i.e. paths beginning with "http://" or "https://" are also checked for validity, but only on the domain level. Checking if the complete URL is valid is prevented by Foundry's CORS policy.
+### Repairing paths
 
-Klicking the browse button opens a file browser. In case of invalid paths it opens it at the last valid path.
+Choosing a file in the browser **saves immediately**. Typing a path manually enables
+**Save** and **Reset** for that row. A successful save is followed by a fresh check;
+valid entries leave the invalid-only list and their usage count updates.
 
-Alternatively, the path can be edited in place. It can then either be reset or saved by the corresponding icons.
+For wildcard token paths, selecting a single file replaces the pattern. A warning
+explains this before the picker opens. To preserve random image selection, edit the
+folder or pattern manually. Auditing itself does not change the random-image flag.
 
-![Invalid Path edited](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/invalid-path-edited.png)
+Use **Search** to filter by document name, path or parent name. Search runs when
+its button or Enter is pressed. **Replace all** operates on the current result set;
+back up your world before making bulk changes. An empty search does not perform a
+replacement. A stopped replacement may have already saved earlier entries; recheck
+before retrying.
 
-At the top of the window is an input field for searching and replacing. The search is not performed before either clicking the search button or hitting the enter key. The same is true for replacing all occurences of the search term. Both fields can be cleared by the clear button, or by hitting escape.
+The existing setting to audit on world startup remains available. External URLs
+retain a best-effort reachability check; cross-origin restrictions prevent this
+from proving that an individual remote file exists.
 
-![Search and Replace](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/search-and-replace.png)
-
-The checkbox at the top allows to display only assets with an invalid path.
-
-![Only invalid Assets](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/only-invalid.png)
-
-In the module settings a checkbox can be ticked to run a check of all asset filepaths on every startup and display an error message if some paths are not valid.
-
-![Module Settings](https://raw.githubusercontent.com/thecomamba/assetauditor/main/img/module-settings.png)
+See [Testing](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md) for automated checks, the pending in-Foundry checklist
+and the exact scope of the supported paths.
 
 ## Contributing
 
-Asset Auditor is very close to feature complete in my opinion. If you disagree, either because you are missing some functionality, because I have overlooked an asset type, or because you suspect a bug, please let me know by [creating an issue](https://github.com/TheComamba/AssetAuditor/issues). Also have a look at the existing issues and let me know if you want me to prioritize one of them.
+For feedback on these changes, use the
+[draft pull request](https://github.com/vertigoogle/AssetAuditor/pull/1).
+The upstream project is [TheComamba/AssetAuditor](https://github.com/TheComamba/AssetAuditor);
+its author and MIT license are retained. An upstream submission can follow after
+review and the pending in-Foundry validation.
 
-I am also open to pull requests.
+To run the development checks, use Node.js 24.15 or newer:
 
-If you want to add a new language, add a file called `src/lang/<new-lang>.json`, where `<new-lang>` is the corresponding [two-letter ISO 639-1 language code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). In `src/module.json`, add a new entry in the `"languages"` array. Running `foundry_scripts/check_localizations_consistency.sh` will list all keys that are not translated into your language. It will also discover some typos.
-
-## Manual Installation
-
-To manually install Asset Auditor (e.g. for development), copy the src/ folder of this repository to the {userData}/Data/modules/ folder of Foundry, and then rename it to 'asset-auditor' (the id declared in module.json).
-
-On POSIX compliant operating systems like Linux and Mac you can alternatively use a symbolic link. It can be created via e.g.
-
-```bash
-ln -s {folder containing git repo}/AssetAuditor/src {Foundry user data}/Data/modules/asset-auditor
+```sh
+npm ci --ignore-scripts
+npm test
+npm run check
 ```
+
+To add a language, create `src/lang/<language-code>.json` and register it in
+`src/module.json`. Keep localization keys and placeholders consistent with the
+English source. The upstream `foundry_scripts/check_localizations_consistency.sh`
+check is also run by CI.
+
+## Trying the development version
+
+Use a disposable Foundry world and back up your data first.
+
+1. Check out the
+   [`improve-asset-auditing-v14` branch](https://github.com/vertigoogle/AssetAuditor/tree/improve-asset-auditing-v14).
+2. Copy **the contents of `src/`** into
+   `<Foundry User Data>/Data/modules/asset-auditor/`.
+3. Restart Foundry to reload the module manifest, enable Asset Auditor in the test
+   world, and reload the browser.
+4. Follow the
+   [manual test checklist](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md).
+
+`node_modules/`, tests and other development files do not belong in the installed
+module folder. The manifest version and upstream manifest/download URLs are
+intentionally unchanged for maintainer-controlled release management. **Do not
+use those URLs expecting to install this fork's draft**, and be aware that an
+ordinary module update can replace a manually installed development copy.
 
 ## License
 
