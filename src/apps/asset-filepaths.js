@@ -3,6 +3,14 @@ import { openAssetOriginal } from "./asset-original.js";
 import { getAllAssets, getAllAssetTypes, getAssetPath, getLastValidPath, setAssetPath, checkAssetPath, containsWildcard } from "../scripts/asset-aggregation.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+const scanLabels = {
+    idle: "asset-auditor.app.scan-idle",
+    starting: "asset-auditor.app.scan-starting",
+    directories: "asset-auditor.app.scan-directories",
+    documents: "asset-auditor.app.scan-documents",
+    hints: "asset-auditor.app.scan-hints",
+    error: "asset-auditor.app.scan-error"
+};
 
 class AssetFilepaths extends HandlebarsApplicationMixin(ApplicationV2) {
     static DEFAULT_OPTIONS = {
@@ -73,9 +81,9 @@ class AssetFilepaths extends HandlebarsApplicationMixin(ApplicationV2) {
             });
         }
         if (["directories", "documents", "hints"].includes(phase)) {
-            return game.i18n.format(`asset-auditor.app.scan-${phase}`, {completed, total});
+            return game.i18n.format(scanLabels[phase], {completed, total});
         }
-        return game.i18n.localize(`asset-auditor.app.scan-${phase}`);
+        return game.i18n.localize(scanLabels[phase] ?? scanLabels.idle);
     }
 
     updateScanUI() {
