@@ -1,42 +1,21 @@
-const constructedIdMarker = "_ID_GENERATED_BY_ASSET_AUDITOR";
+import { getPrototypeActor } from "./asset-identity.js";
+
 const domainCache = {};
-let isWindowsPlatform;
-
-async function isWindows() {
-    if (navigator.userAgentData) {
-        const hints = ["platform"];
-        let data = await navigator.userAgentData.getHighEntropyValues(hints);
-        return data.platform === "Win32" || data.platform === "Windows";
-    } else {
-        console.log("User agent data not available.");
-        return false;
-    }
-}
-
-
-function isIdConstructed(id) {
-    return id.includes(constructedIdMarker);
-}
 
 function getAssets(collectionName, extractAssets) {
     const assets = [];
-    const assetIds = new Set();
-    const collection = game.collections.get(collectionName);
-
-    collection.forEach(item => {
-        const items = extractAssets(item);
-        if (items.length === 1 && !items[0]._id) {
-            const constructedId = item._id + "_" + items[0].constructor.name + constructedIdMarker;
-            items[0]._id = constructedId;
-        }
-        items.forEach(asset => {
-            if (!assetIds.has(asset._id)) {
+    const identities = new Set();
+    for (const item of game.collections.get(collectionName) ?? []) {
+        for (const asset of extractAssets(item) ?? []) {
+            if (!asset) continue;
+            // Embedded IDs are unique within their parent, not across the world.
+            const identity = asset.uuid ?? asset;
+            if (!identities.has(identity)) {
+                identities.add(identity);
                 assets.push(asset);
-                assetIds.add(asset._id);
             }
-        });
-    });
-
+        }
+    }
     return assets;
 }
 
@@ -100,7 +79,7 @@ const assetPathMap = new Map([
 function getAssetPath(asset) {
     for (const [assetType, propertyPath] of assetPathMap.entries()) {
         if (asset instanceof assetType) {
-            return propertyPath.split('.').reduce((obj, prop) => obj[prop], asset);
+            return propertyPath.split('.').reduce((obj, prop) => obj?.[prop], asset);
         }
     }
     showAssetTypeError(asset.constructor.name);
@@ -110,11 +89,16 @@ function getAssetPath(asset) {
 async function setAssetPath(asset, path) {
     for (const [assetType, propertyPath] of assetPathMap.entries()) {
         if (asset instanceof assetType) {
-            await asset.update({ [propertyPath]: path });
-            return;
+            if (asset instanceof foundry.data.PrototypeToken) {
+                const actor = getPrototypeActor(asset);
+                if (!actor) throw new Error("The prototype token's actor is no longer available.");
+                await actor.update({ [`prototypeToken.${propertyPath}`]: path });
+                return actor.prototypeToken;
+            }
+            return (await asset.update({ [propertyPath]: path })) ?? asset;
         }
     }
-    showAssetTypeError(asset.constructor.name);
+    throw new Error(`Unsupported asset type: ${asset.constructor.name}`);
 }
 
 function getIcon(asset, isValid) {
@@ -151,7 +135,7 @@ function getIcon(asset, isValid) {
     if (asset instanceof User) {
         return "fas fa-file-image";
     }
-    showAssetTypeError(type);
+    showAssetTypeError(asset.constructor.name);
     return "fas fa-times"
 }
 
@@ -171,49 +155,42 @@ function collectAssetDirectories(pointerGroups) {
     return Array.from(assetDirs);
 }
 
-async function initializeFileCache(assetDirs) {
-    isWindowsPlatform = await isWindows();
+// Relative asset URLs may resolve to User Data or Foundry's built-in Core Data.
+// Failure to browse one source must not hide a valid file in the other source.
+async function browseAssetSources(target, options = {}) {
+    return await Promise.allSettled(
+        ["data", "public"].map(source => FilePicker.browse(source, target, options))
+    );
+}
+
+async function initializeFileCache(assetDirs, onProgress) {
     const fileCache = {};
-    for (let dir of assetDirs) {
-        if (isUrl(dir)) {
-            continue;
-        }
-        if (!fileCache.hasOwnProperty(dir)) {
-            try {
-                const fileResult = await FilePicker.browse("data", dir);
-                if (isWindowsPlatform) {
-                    dir = dir.toLowerCase();
-                    fileResult.files = fileResult.files.map(file => file.toLowerCase());
-                }
-                fileCache[dir] = fileResult.files;
-            } catch (error) {
-                if (isWindowsPlatform) {
-                    dir = dir.toLowerCase();
-                }
-                fileCache[dir] = [];
-            }
-        }
+    const directories = new Map();
+    for (const dir of assetDirs) {
+        if (!isUrl(dir)) directories.set(dir, dir);
+    }
+    let completed = 0;
+    onProgress?.({phase: "directories", completed, total: directories.size});
+    for (const [key, dir] of directories) {
+        const listings = await browseAssetSources(dir);
+        const files = listings.flatMap(result =>
+            result.status === "fulfilled" ? (result.value.files ?? []) : []
+        );
+        fileCache[key] = [...new Set(files)];
+        onProgress?.({phase: "directories", completed: ++completed, total: directories.size});
     }
     return fileCache;
 }
 
-function isFileContained(file, files) {
-    while (file.startsWith('/')) {
-        file = file.substring(1);
-    }
-    if (isWindowsPlatform) {
-        file = file.toLowerCase();
-    }
-    if (files.includes(file)) {
-        return true;
-    }
-    const encodedFile = encodeURI(file);
-    for (const f of files) {
-        if (f === encodedFile) {
-            return true;
-        }
-    }
-    return false;
+function normalizeLocalPath(path) {
+    const localPath = stripQueryString(path).replace(/^\/+/, "");
+    try { return decodeURI(localPath); }
+    catch { return localPath; }
+}
+
+function isFileContained(file, files = []) {
+    const normalized = normalizeLocalPath(file);
+    return files.some(candidate => normalizeLocalPath(candidate) === normalized);
 }
 
 function isUrl(path) {
@@ -234,18 +211,14 @@ async function isValidPath(path, fileCache) {
 }
 
 async function isValidLocalPath(path, fileCache) {
-    let pathWithoutQuery = stripQueryString(path);
-    
-    if (isWindowsPlatform) {
-        pathWithoutQuery = pathWithoutQuery.toLowerCase();
-    }
+    const pathWithoutQuery = stripQueryString(path);
 
     if (containsWildcard(pathWithoutQuery)) {
         return await wildcardExpandsToAtLeastOne(pathWithoutQuery);
     }
 
     const dirIndex = pathWithoutQuery.lastIndexOf('/');
-    let dir = dirIndex !== -1 ? pathWithoutQuery.substring(0, dirIndex) : '';
+    const dir = dirIndex !== -1 ? pathWithoutQuery.substring(0, dirIndex) : '';
     const files = fileCache[dir];
     return isFileContained(pathWithoutQuery, files);
 }
@@ -255,12 +228,16 @@ function containsWildcard(path) {
 }
 
 // Heavily inspired by https://github.com/League-of-Foundry-Developers/scene-packer/blob/main/scripts/assets/file.js
+async function wildcardMatchCount(path) {
+    const listings = await browseAssetSources(stripQueryString(path), { wildcard: true });
+    const files = listings.flatMap(result => result.status === "fulfilled"
+        ? (result.value.files ?? []) : []);
+    // Identical URLs in both storage sources are one selectable token image.
+    return new Set(files).size;
+}
+
 async function wildcardExpandsToAtLeastOne(path) {
-    const base = await FilePicker.browse("data", path, { wildcard: true });
-    if (!base.files.length) {
-        return false;
-    }
-    return base.files.length > 0;
+    return (await wildcardMatchCount(path)) > 0;
 }
 
 // Checking the full path is not possible due to CORS issues,
@@ -283,12 +260,8 @@ async function isValidHttpDomain(path) {
 }
 
 async function dirExists(dir) {
-    try {
-        const result = await FilePicker.browse("data", dir);
-        return true;
-    } catch (error) {
-        return false;
-    }
+    const listings = await browseAssetSources(dir);
+    return listings.some(result => result.status === "fulfilled");
 }
 
 async function getLastValidPath(inputPath) {
@@ -309,25 +282,32 @@ async function getLastValidPath(inputPath) {
     return lastValidPath;
 }
 
-async function addLastValidPathsToInvalidAssets(assets) {
+async function addLastValidPathsToInvalidAssets(assets, onProgress) {
+    const total = assets.reduce((count, group) => count + group.assets.filter(asset => !asset.isValid).length, 0);
+    let completed = 0;
+    onProgress?.({phase: "hints", completed, total});
     for (const assetTypes of assets) {
         for (const asset of assetTypes.assets) {
             if (!asset.isValid) {
                 asset.lastValidPath = await getLastValidPath(asset.path);
+                onProgress?.({phase: "hints", completed: ++completed, total});
             }
         }
     }
 }
 
-async function getAllAssets(invalidOnly, searchText, singularType) {
-    console.time('getAllAssets');
-
+async function getAllAssets(invalidOnly, searchText, singularType, onProgress) {
     const pointerGroups = getAllAssetPointers(singularType);
     const assetDirs = collectAssetDirectories(pointerGroups);
-    const fileCache = await initializeFileCache(assetDirs);
+    const fileCache = await initializeFileCache(assetDirs, onProgress);
+    const total = pointerGroups.reduce((count, group) => count + group.collection.length, 0);
+    let completed = 0;
+    onProgress?.({phase: "documents", completed, total});
     let assetPromises = pointerGroups.map(async group => {
         let mappedAssetPromises = group.collection.map(async asset => {
-            return await assetPointerToObject(asset, fileCache);
+            const result = await assetPointerToObject(asset, fileCache);
+            onProgress?.({phase: "documents", completed: ++completed, total});
+            return result;
         });
 
         let mappedAssets = await Promise.all(mappedAssetPromises);
@@ -340,7 +320,8 @@ async function getAllAssets(invalidOnly, searchText, singularType) {
 
         if (searchText) {
             const search = searchText;
-            mappedAssets = mappedAssets.filter(asset => asset.name.includes(search) || asset.path.includes(search));
+            mappedAssets = mappedAssets.filter(asset => asset.name.includes(search) || asset.path.includes(search)
+                || (asset.asset.parent?.name ?? '').includes(search));
         }
 
         mappedAssets.sort((a, b) => a.name.localeCompare(b.name));
@@ -353,11 +334,9 @@ async function getAllAssets(invalidOnly, searchText, singularType) {
 
     let assets = await Promise.all(assetPromises);
 
-    await addLastValidPathsToInvalidAssets(assets);
+    await addLastValidPathsToInvalidAssets(assets, onProgress);
 
     assets.sort((a, b) => a.type.localeCompare(b.type));
-
-    console.timeEnd('getAllAssets');
 
     return assets;
 }
@@ -366,26 +345,24 @@ async function assetPointerToObject(asset, fileCache) {
     if (!asset) {
         return null;
     }
-    const id = asset._id;
-    if (!id) {
-        return null;
-    }
-    if (isIdConstructed(id)) {
-        asset._id = null;
-    }
+    const owner = asset instanceof foundry.data.PrototypeToken ? getPrototypeActor(asset) : null;
+    const id = asset.uuid ?? (owner ? `${owner.uuid}.prototypeToken` : asset.id ?? asset._id);
+    if (!id) return null;
     const name = asset.name ?? '';
     if (!name) {
         return null;
     }
     const path = getAssetPath(asset);
-    if (!path || path.startsWith("icons/")) {
+    if (!path) {
         return null;
     }
     const type = asset.constructor.name;
     if (!type) {
         return null;
     }
-    const isValid = await isValidPath(path, fileCache);
+    const isWildcard = !isUrl(path) && containsWildcard(stripQueryString(path));
+    const wildcardCount = isWildcard ? await wildcardMatchCount(path) : null;
+    const isValid = isWildcard ? wildcardCount > 0 : await isValidPath(path, fileCache);
     if (isValid === null) {
         return null;
     }
@@ -398,10 +375,20 @@ async function assetPointerToObject(asset, fileCache) {
         icon: icon,
         id: id,
         isValid: isValid,
+        isWildcard,
+        wildcardCount,
         name: name,
         path: path,
         type: type,
     };
 }
 
-export { getAllAssets, getAllAssetTypes, getAssetPath, getLastValidPath, setAssetPath };
+// Validate against a fresh directory listing rather than the window's old result.
+async function checkAssetPath(path) {
+    if (!path) return false;
+    const cleanPath = stripQueryString(path);
+    const directory = cleanPath.substring(0, cleanPath.lastIndexOf('/'));
+    return await isValidPath(path, await initializeFileCache([directory]));
+}
+
+export { getAllAssets, getAllAssetTypes, getAssetPath, getLastValidPath, setAssetPath, checkAssetPath, containsWildcard, wildcardMatchCount };
