@@ -26,8 +26,11 @@ editing into one overview, making asset reorganizations easier to review.
 
 ## Usage
 
-Enable the module and open **Asset Filepaths** from the Settings sidebar. The
-window displays progress while the audit runs, then shows its result summary.
+Enable the module and open **Asset Filepaths** from the Settings sidebar.
+
+![Settings sidebar with the settings tab and Asset Filepaths button highlighted](img/settings-sidebar-v14.png)
+
+The window displays progress while the audit runs, then shows its result summary.
 Use **Recheck** to repeat the audit.
 
 ### Find the affected usage
@@ -35,6 +38,12 @@ Use **Recheck** to repeat the audit.
 Results are organized by document type and exact file path. Expand a group to see
 its individual usages. Context labels distinguish similarly named objects across
 scenes and other parent documents. **Open original** opens the associated editor.
+
+![Audit overview with a completed scan, search and replace tools, type filter and grouped item usages](img/audit-overview-v14.png)
+
+The overview combines the scan summary and filters with expandable usage groups.
+Each entry identifies its parent and provides controls for opening the original,
+choosing a file and editing its path.
 
 Missing paths show a warning icon and the last valid parent directory. Enable
 **Show only invalid filepaths** to focus on references requiring attention.
@@ -46,6 +55,11 @@ identify a pattern requiring repair.
 Choosing a file in the browser **saves immediately**. For manual path edits, use
 **Save** or **Reset** on the affected row. Each successful save triggers a fresh
 validation, and repaired entries disappear from the invalid-only results.
+
+![Invalid placed-token reference showing its scene, file path and last valid parent directory](img/invalid-reference-v14.png)
+
+The invalid-only view shows the affected scene and the last valid directory,
+providing the context needed to locate a replacement file.
 
 Selecting an individual file for a wildcard reference replaces its pattern. The
 picker displays a reminder before selection. To retain a pattern, edit its folder
@@ -66,6 +80,8 @@ replacement field runs the replacement, just as its button does.
 Open **Game Settings → Configure Settings → Module Settings**, find Asset Auditor
 and enable **Run asset audit on startup**. Each world startup then runs an audit
 and displays an error notification with the number of invalid references found.
+
+![Asset Auditor setting to run an audit automatically when the world starts](img/startup-audit-setting-v14.png)
 
 ### External URLs
 
