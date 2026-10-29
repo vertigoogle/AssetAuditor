@@ -1,93 +1,83 @@
 # Asset Auditor
 
-## Development fork
+Asset Auditor helps Foundry Virtual Tabletop GMs find and repair broken references
+to images, maps and audio. It brings file validation, document navigation and path
+editing into one overview, making asset reorganizations easier to review.
 
 This is [vertigoogle's development fork](https://github.com/vertigoogle/AssetAuditor)
 of [Asset Auditor by The Comamba](https://github.com/TheComamba/AssetAuditor).
-The original module finds broken asset references in Foundry Virtual Tabletop.
-This fork prepares improvements to path validation, repair workflows and the audit
-window for Foundry v14.
+The Foundry v14 improvements are available on
+[`improve-asset-auditing-v14`](https://github.com/vertigoogle/AssetAuditor/tree/improve-asset-auditing-v14)
+and are being reviewed in [draft pull request #1](https://github.com/vertigoogle/AssetAuditor/pull/1).
 
-**Development status:** the improvements below are on
-[`improve-asset-auditing-v14`](https://github.com/vertigoogle/AssetAuditor/tree/improve-asset-auditing-v14),
-with [draft pull request #1](https://github.com/vertigoogle/AssetAuditor/pull/1)
-tracking the contribution. The default `main` branch still contains the original
-module code; this README is the fork's development overview. There is no fork
-release yet, and no pull request has been submitted upstream.
+## Features
 
-### Improvements in the draft
-
-- Resizable ApplicationV2 window, fixed tools and separately scrolling results.
-- Visible scan stages, progress counters and explicit completion or failure states.
-- Validation against both User Data and Core Data, including wildcard match counts.
-- Grouped file usages with scene/parent labels and navigation to the original object.
-- Automatic saving after file selection, fresh validation and removal of repaired
-  entries from the invalid-only result without losing unrelated draft edits.
-- Parent-qualified embedded-document identities and actor-owned prototype writes.
-- Stale-picker protection, deferred rescans during writes and explicit error recovery.
-- English and German localization, 22 automated tests and GitHub Actions checks.
-
-The automated checks pass. **Native Foundry UI and interoperability validation are
-still pending**, so this remains a draft rather than a production release. See the
-[testing guide and manual checklist](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md).
-Tokenizer is optional; this fork does not introduce a Tokenizer dependency or claim
-to audit its editing layers, caches or dynamic-ring subject fields.
+- **Clear audit overview:** a resizable ApplicationV2 window with fixed tools and
+  a separately scrolling result list.
+- **Visible scan progress:** stage counters show directory listing, reference
+  checking and the preparation of repair hints, followed by a completion summary.
+- **User Data and Core Data validation:** both storage sources contribute to file
+  checks, including wildcard patterns and their matching-file counts.
+- **Grouped usages:** references sharing a file path are grouped, with scene,
+  actor, playlist and journal labels identifying each individual usage.
+- **Direct navigation:** open the document or configuration associated with a
+  reference to inspect it in its original context.
+- **Immediate repair feedback:** file selection saves automatically, validates the
+  stored path and updates the invalid-only results and group counts.
+- **Reliable document targeting:** parent-qualified identities distinguish embedded
+  documents, while prototype-token changes are saved through their owning Actor.
+- **Coordinated editing:** picker callbacks, document writes and rescans share a
+  controlled workflow with visible error recovery.
+- **English and German localization**, backed by automated tests and GitHub Actions.
 
 ## Usage
 
-Enable the module and open **Asset Filepaths** from the Settings sidebar. The audit
-window uses Foundry's ApplicationV2 frame, with a resizable layout, fixed tools and
-a separately scrolling result list.
+Enable the module and open **Asset Filepaths** from the Settings sidebar. The
+window displays progress while the audit runs, then shows its result summary.
+Use **Recheck** to repeat the audit.
 
-The window opens before scanning starts. Progress reports directory listing, asset
-checking and locating valid parent directories as separate stages. Completion is
-explicit, including zero-result scans. Use **Recheck** to run the scan again.
+### Find the affected usage
 
-### Results and navigation
-
-Entries are organized by document type and exact file path. Repeated paths are
-collapsed into groups of usages; expand one to edit an individual reference. Scene,
-actor, playlist and journal labels distinguish otherwise identical names. The
-**Open original** button opens the related document or configuration. Navigating
-to a placed token does not switch or activate its scene.
+Results are organized by document type and exact file path. Expand a group to see
+its individual usages. Context labels distinguish similarly named objects across
+scenes and other parent documents. **Open original** opens the associated editor.
 
 Missing paths show a warning icon and the last valid parent directory. Enable
-**Show only invalid filepaths** to focus on unresolved references. User Data and
-Core Data are both checked. Wildcard patterns show their number of distinct matching
-file URLs; a pattern with no matches is invalid.
+**Show only invalid filepaths** to focus on references requiring attention.
+Wildcard entries show the number of distinct matching file URLs; zero matches
+identify a pattern requiring repair.
 
-### Repairing paths
+### Repair a reference
 
-Choosing a file in the browser **saves immediately**. Typing a path manually enables
-**Save** and **Reset** for that row. A successful save is followed by a fresh check;
-valid entries leave the invalid-only list and their usage count updates.
+Choosing a file in the browser **saves immediately**. For manual path edits, use
+**Save** or **Reset** on the affected row. Each successful save triggers a fresh
+validation, and repaired entries disappear from the invalid-only results.
 
-For wildcard token paths, selecting a single file replaces the pattern. A warning
-explains this before the picker opens. To preserve random image selection, edit the
-folder or pattern manually. Auditing itself does not change the random-image flag.
+Selecting an individual file for a wildcard reference replaces its pattern. The
+picker displays a reminder before selection. To retain a pattern, edit its folder
+or expression in the path field and save manually.
 
-Use **Search** to filter by document name, path or parent name. Search runs when
-its button or Enter is pressed. **Replace all** operates on the current result set;
-back up your world before making bulk changes. An empty search does not perform a
-replacement. A stopped replacement may have already saved earlier entries; recheck
-before retrying.
+### Search and replace
 
-The existing setting to audit on world startup remains available. External URLs
-retain a best-effort reachability check; cross-origin restrictions prevent this
-from proving that an individual remote file exists.
+**Search** filters by document name, path or parent name. Submit a query using its
+button or Enter. **Replace all** applies the replacement to the current result set
+when a search term is provided. Back up the world before bulk changes. If a
+replacement stops partway through, use **Recheck** to review the saved results.
 
-See [Testing](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md) for automated checks, the pending in-Foundry checklist
-and the exact scope of the supported paths.
+The module also offers an audit-on-startup setting and best-effort reachability
+checks for external URLs.
 
-## Contributing
+## Development and validation
 
-For feedback on these changes, use the
-[draft pull request](https://github.com/vertigoogle/AssetAuditor/pull/1).
-The upstream project is [TheComamba/AssetAuditor](https://github.com/TheComamba/AssetAuditor);
-its author and MIT license are retained. An upstream submission can follow after
-review and the pending in-Foundry validation.
+The draft includes **22 passing automated tests** and GitHub Actions checks for
+module behavior, syntax, version consistency and localization. The tests import
+the actual ES modules and exercise the Handlebars template and DOM handlers in
+jsdom with simulated Foundry APIs.
 
-To run the development checks, use Node.js 24.15 or newer:
+The [testing guide](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md)
+tracks native Foundry validation and provides reproducible manual test cases.
+
+Use Node.js 24.15 or newer to run the development checks:
 
 ```sh
 npm ci --ignore-scripts
@@ -95,30 +85,32 @@ npm test
 npm run check
 ```
 
-To add a language, create `src/lang/<language-code>.json` and register it in
-`src/module.json`. Keep localization keys and placeholders consistent with the
-English source. The upstream `foundry_scripts/check_localizations_consistency.sh`
-check is also run by CI.
-
 ## Trying the development version
 
-Use a disposable Foundry world and back up your data first.
+Use a test world and back up your data first.
 
 1. Check out the
    [`improve-asset-auditing-v14` branch](https://github.com/vertigoogle/AssetAuditor/tree/improve-asset-auditing-v14).
 2. Copy **the contents of `src/`** into
    `<Foundry User Data>/Data/modules/asset-auditor/`.
-3. Restart Foundry to reload the module manifest, enable Asset Auditor in the test
-   world, and reload the browser.
+3. Restart Foundry, enable Asset Auditor in the test world and reload the browser.
 4. Follow the
    [manual test checklist](https://github.com/vertigoogle/AssetAuditor/blob/improve-asset-auditing-v14/docs/testing.md).
 
-`node_modules/`, tests and other development files do not belong in the installed
-module folder. The manifest version and upstream manifest/download URLs are
-intentionally unchanged for maintainer-controlled release management. **Do not
-use those URLs expecting to install this fork's draft**, and be aware that an
-ordinary module update can replace a manually installed development copy.
+The `src/` directory is the installable module payload. This branch is distributed
+as a development source checkout; release packaging is coordinated with the
+upstream maintainer.
 
-## License
+## Contributing
 
-This software is distributed under the [MIT](https://choosealicense.com/licenses/mit/) license. In a nutshell this means that all code is made public, and you are free to use it without any charge.
+Feedback and review are welcome in the
+[draft pull request](https://github.com/vertigoogle/AssetAuditor/pull/1).
+
+To add a language, create `src/lang/<language-code>.json` and register it in
+`src/module.json`. Match the English localization keys and interpolation
+placeholders. CI runs the upstream localization consistency check.
+
+## License and attribution
+
+Asset Auditor was created by [The Comamba](https://github.com/TheComamba/AssetAuditor).
+This fork continues the project under its [MIT license](LICENSE).
