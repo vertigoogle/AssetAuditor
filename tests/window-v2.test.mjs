@@ -4,7 +4,7 @@ import {readFileSync, existsSync} from 'node:fs';
 import {reset, actor, listing, env, AssetFilepaths, waitFor} from './helpers/foundry.mjs';
 beforeEach(reset);
 async function open(options) {
-    const app = new AssetFilepaths(options);app.singularType = 'Actor';await app.render({force: true});return app;
+    const app = new AssetFilepaths(options);app.singularType = 'Actor';await app.render({force: true});await app._scanPromise;return app;
 }
 async function sidebar(name) {
     const callbacks = new Map();
@@ -70,12 +70,13 @@ test('the sidebar reuses one window and waits for a pending render before bringi
     let release;env.listings.set('data|images|directory', () => new Promise(resolve => {release = resolve;}));
     await sidebar('reuse');const button = document.querySelector('.asset-list');button.click();button.click();
     await waitFor(() => release);
-    assert.equal(env.instances.length, 1);assert.equal(env.renders.length, 1);assert.equal(env.fronts.length, 0);
+    assert.equal(env.instances.length, 1);assert.equal(env.renders.length, 1);
+    assert.equal(env.fronts.length, env.instances[0]._scanBusy ? 2 : 0);
     listing('data', 'images', []);release({files: []});
-    await waitFor(() => env.fronts.length === 2);
+    await waitFor(() => env.fronts.length === 2);await env.instances[0]._scanPromise;
     assert.equal(document.querySelectorAll('.application.asset-auditor').length, 1);
     await env.instances[0].close();button.click();
-    await waitFor(() => env.fronts.length === 3);
+    await waitFor(() => env.fronts.length === 3);await env.instances[0]._scanPromise;
     assert.equal(env.instances.length, 1);assert.equal(document.querySelectorAll('.application.asset-auditor').length, 1);
 });
 test('an unavailable settings sidebar reports its existing localized error', async () => {
