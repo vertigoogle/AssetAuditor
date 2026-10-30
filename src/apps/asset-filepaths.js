@@ -2,9 +2,23 @@ import { updateWildcardFeedback } from "./asset-wildcards.js";
 import { groupAssetRows } from "./asset-groups.js";
 import { getAllAssets, getAllAssetTypes, getAssetPath, getLastValidPath, setAssetPath, checkAssetPath, getIcon, isWildcardPath } from "../scripts/asset-aggregation.js";
 
-class AssetFilepaths extends Application {
-    constructor() {
-        super();
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+class AssetFilepaths extends HandlebarsApplicationMixin(ApplicationV2) {
+    static DEFAULT_OPTIONS = {
+        id: "asset-auditor-filepaths",
+        classes: ["asset-auditor"],
+        tag: "div",
+        window: {title: "asset-auditor.asset-filepaths", icon: "fas fa-file-circle-check", resizable: true},
+        position: {width: 1100, height: 760}
+    };
+
+    static PARTS = {
+        main: {template: "modules/asset-auditor/apps/asset-filepaths.hbs", scrollable: [".asset-results"]}
+    };
+
+    constructor(options = {}) {
+        super(options);
         this.context = {};
         this._savingAssets = new Set();
         this._refreshRequested = false;
@@ -16,12 +30,8 @@ class AssetFilepaths extends Application {
         this.singularType = '';
     }
 
-    get template() {
-        return `modules/asset-auditor/apps/asset-filepaths.hbs`;
-    }
-
-    async getData(options = {}) {
-        this.context = await super.getData(options);
+    async _prepareContext(options = {}) {
+        this.context = await super._prepareContext(options);
         this.context.title = game.i18n.localize("asset-auditor.asset-filepaths");
         this.context.showInvalidOnly = this.showInvalidOnly
         this.context.currentSearchInput = this.currentSearchInput;
@@ -38,8 +48,12 @@ class AssetFilepaths extends Application {
         return this.context;
     }
 
+    _onRender(context, options) {
+        super._onRender(context, options);
+        this.activateListeners($(this.element));
+    }
+
     activateListeners(html) {
-        super.activateListeners(html);
         html.off('asset-auditor:path-saved.wildcards').on('asset-auditor:path-saved.wildcards', (_event, entry, row) => {
             void updateWildcardFeedback(entry, row).catch(error =>
                 console.error("Asset Auditor | Could not refresh wildcard feedback", error));
@@ -103,9 +117,9 @@ class AssetFilepaths extends Application {
             const input = resetButton.siblings('.path-input');
             const originalValue = input.data('original-value');
             input.val(originalValue);
-            resetButton.css('opacity', 0);
+            resetButton.css('opacity', '');
             resetButton.prop('disabled', true);
-            updateButton.css('opacity', 0);
+            updateButton.css('opacity', '');
             updateButton.prop('disabled', true);
         });
 
@@ -145,14 +159,14 @@ class AssetFilepaths extends Application {
             const resetButton = input.siblings('.reset-button');
             const updateButton = input.siblings('.update-button');
             if (currentValue !== originalValue) {
-                resetButton.css('opacity', 1);
+                resetButton.css('opacity', '');
                 resetButton.prop('disabled', false);
-                updateButton.css('opacity', 1);
+                updateButton.css('opacity', '');
                 updateButton.prop('disabled', false);
             } else {
-                resetButton.css('opacity', 0);
+                resetButton.css('opacity', '');
                 resetButton.prop('disabled', true);
-                updateButton.css('opacity', 0);
+                updateButton.css('opacity', '');
                 updateButton.prop('disabled', true);
             }
         });
@@ -165,6 +179,7 @@ class AssetFilepaths extends Application {
             })
             .on('keydown', (event) => {
                 if (event.key === 'Enter') {
+                    event.preventDefault();
                     this.performSearch(html);
                 } else if (event.key === 'Escape') {
                     this.performDeleteSearch(event, html);
@@ -179,6 +194,7 @@ class AssetFilepaths extends Application {
             })
             .on('keydown', async (event) => {
                 if (event.key === 'Enter') {
+                    event.preventDefault();
                     await this.performReplacement(html);
                 } else if (event.key === 'Escape') {
                     this.performDeleteReplace(event, html);
@@ -243,7 +259,7 @@ class AssetFilepaths extends Application {
         this._refreshRequested = false;
         this._loading = true;
         html.find('button, input, select').prop('disabled', true);
-        return this.render();
+        return this.render({force: true});
     }
 
     updateOperability(html) {
@@ -252,22 +268,22 @@ class AssetFilepaths extends Application {
         const replaceButton = html.find('.replace-button');
         if (this.currentSearchInput.trim() !== '') {
             deleteSearchButton.prop('disabled', false);
-            deleteSearchButton.css('opacity', 1);
+            deleteSearchButton.css('opacity', '');
             searchButton.prop('disabled', false);
             replaceButton.prop('disabled', false);
         } else {
             deleteSearchButton.prop('disabled', true);
-            deleteSearchButton.css('opacity', 0);
+            deleteSearchButton.css('opacity', '');
             searchButton.prop('disabled', true);
             replaceButton.prop('disabled', true);
         }
         const deleteReplaceButton = html.find('.delete-replace-button');
         if (this.replaceText.trim() !== '') {
             deleteReplaceButton.prop('disabled', false);
-            deleteReplaceButton.css('opacity', 1);
+            deleteReplaceButton.css('opacity', '');
         } else {
             deleteReplaceButton.prop('disabled', true);
-            deleteReplaceButton.css('opacity', 0);
+            deleteReplaceButton.css('opacity', '');
         }
     }
 
@@ -315,7 +331,7 @@ class AssetFilepaths extends Application {
             controls.prop('disabled', false);
             const dirty = input.val() !== input.data('original-value');
             updateButton.add(updateButton.siblings('.reset-button'))
-                .prop('disabled', !dirty).css('opacity', dirty ? 1 : 0);
+                .prop('disabled', !dirty).css('opacity', '');
             if (!this._savingAssets.size && this._refreshRequested) this.refresh(html);
         }
     }
