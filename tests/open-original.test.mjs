@@ -37,7 +37,7 @@ globalThis.ui = {};
 function sheet(document) { return {async render(...args) { opened.push({document, args}); }}; }
 function bind(app) {
     const bindings = new Map();
-    const html = {find(selector) { return {
+    const html = {on() { return this; }, off() { return this; }, find(selector) { return {
         click(callback) { bindings.set(selector, callback); return this; },
         change() { return this; }, on() { return this; }, prop() { return this; }, css() { return this; }
     }; }};
