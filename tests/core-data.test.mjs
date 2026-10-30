@@ -1,4 +1,3 @@
-import {readFile} from "node:fs/promises";
 import {test} from "node:test";
 import assert from "node:assert/strict";
 
@@ -8,8 +7,7 @@ for (const name of ["Actor", "Item", "JournalEntryPage", "PlaylistSound", "Scene
 }
 globalThis.foundry = {data: {PrototypeToken: class {}}};
 globalThis.navigator ??= {};
-const source = await readFile(new URL("../src/scripts/asset-aggregation.js", import.meta.url), "utf8");
-const aggregation = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+const aggregation = await import("../src/scripts/asset-aggregation.js");
 let listings;
 globalThis.FilePicker = {async browse(storage, path, options = {}) {
     const key = `${storage}:${path}:${Boolean(options.wildcard)}`;
