@@ -52,13 +52,13 @@
                 <i class="asset-status {{asset.icon}}" style="width: 25px;"></i>
                 <span class="asset-identity" style="width: 150px; overflow-wrap: anywhere; padding-right: 4px;">
                     {{asset.name}}
-                    {{#if asset.asset.parent.name}}
+                    {{#if asset.parentName}}
                     <small class="asset-context" style="display: block; margin-top: 3px;">
-                        {{#if (eq asset.asset.parent.documentName "Scene")}}{{localize "asset-auditor.app.context-Scene"}}:
-                        {{else if (eq asset.asset.parent.documentName "Actor")}}{{localize "asset-auditor.app.context-Actor"}}:
-                        {{else if (eq asset.asset.parent.documentName "Playlist")}}{{localize "asset-auditor.app.context-Playlist"}}:
-                        {{else if (eq asset.asset.parent.documentName "JournalEntry")}}{{localize "asset-auditor.app.context-JournalEntry"}}:
-                        {{/if}}{{asset.asset.parent.name}}
+                        {{#if (eq asset.parentType "Scene")}}{{localize "asset-auditor.app.context-Scene"}}:
+                        {{else if (eq asset.parentType "Actor")}}{{localize "asset-auditor.app.context-Actor"}}:
+                        {{else if (eq asset.parentType "Playlist")}}{{localize "asset-auditor.app.context-Playlist"}}:
+                        {{else if (eq asset.parentType "JournalEntry")}}{{localize "asset-auditor.app.context-JournalEntry"}}:
+                        {{/if}}{{asset.parentName}}
                     </small>
                     {{/if}}
                 </span>
