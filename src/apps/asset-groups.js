@@ -34,7 +34,7 @@ export function groupAssetRows(root, format, getSavedPath) {
                         const count = root.ownerDocument.createElement('strong');
                         count.className = 'asset-group-count';
                         const label = root.ownerDocument.createElement('span');
-                        label.textContent = ' — ' + path;
+                        label.textContent = ' \u2014 ' + path;
                         summary.append(count, label);
                         group.append(summary);
                         container.append(group);
