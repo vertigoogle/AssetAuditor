@@ -396,6 +396,8 @@ async function assetPointerToObject(asset, fileCache) {
     }
     return {
         asset: asset,
+        parentName: asset.parent?.name ?? '',
+        parentType: asset.parent?.documentName ?? '',
         icon: icon,
         id: id,
         isValid: isValid,

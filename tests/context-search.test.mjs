@@ -22,6 +22,7 @@ beforeEach(() => {
 });
 function addUsage(collection, field, Type, id, parentName) {
     const parent = {_id: `parent-${id}`, name: parentName, [field]: []};
+    Object.setPrototypeOf(parent, {get documentName() { return collection; }});
     const document = new Type(id, 'Shared name', parent);
     if (Type === Item) document.img = 'assets/image.webp';
     else if (Type === JournalEntryPage) document.src = 'assets/image.webp';
@@ -45,6 +46,8 @@ for (const [description, collection, field, Type] of [
         const results = await search(Type.name, 'Requested');
         assert.equal(results.length, 1);
         assert.equal(results[0].asset, target);
+        assert.equal(results[0].parentName, 'Requested parent');
+        assert.equal(results[0].parentType, collection);
     });
 }
 test('name and path searches retain their existing behavior', async () => {
