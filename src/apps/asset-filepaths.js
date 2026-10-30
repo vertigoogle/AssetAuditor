@@ -297,6 +297,7 @@ class AssetFilepaths extends Application {
                     row.after(hint);
                 }
             }
+            html.trigger('asset-auditor:path-saved', [entry, row[0]]);
         } catch (error) {
             console.error("Asset Auditor | Could not save asset path", error);
             ui.notifications.error(game.i18n.localize("asset-auditor.app.save-error"));

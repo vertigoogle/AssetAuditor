@@ -159,3 +159,17 @@ test("the persisted path returned by document hooks is rechecked and displayed",
     assert.equal(row.querySelector('.path-input').value, 'images/normalized.webp');
     assert.equal(app.context.assets[0].assets[0].isValid, true);
 });
+
+test("successful saves signal the persisted entry and original row for display updates", async () => {
+    const subject = actor();listing('data', 'images', ['images/fixed.webp']);
+    const app = await openAudit({invalidOnly: false});
+    const row = app.element.querySelector('.asset-row');
+    let saved;
+    $(app.element).on('asset-auditor:path-saved', (_event, entry, element) => {saved = {entry, element};});
+    row.querySelector('.path-input').value = 'images/fixed.webp';
+    await app.saveAssetRow($(row.querySelector('.update-button')), $(app.element));
+    assert.equal(saved.entry.asset, subject);
+    assert.equal(saved.entry.path, 'images/fixed.webp');
+    assert.equal(saved.entry.isValid, true);
+    assert.equal(saved.element, row);
+});
