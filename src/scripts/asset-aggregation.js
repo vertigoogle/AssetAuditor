@@ -340,7 +340,8 @@ async function getAllAssets(invalidOnly, searchText, singularType) {
 
         if (searchText) {
             const search = searchText;
-            mappedAssets = mappedAssets.filter(asset => asset.name.includes(search) || asset.path.includes(search));
+            mappedAssets = mappedAssets.filter(asset => asset.name.includes(search) || asset.path.includes(search)
+                || (asset.asset.parent?.name ?? '').includes(search));
         }
 
         mappedAssets.sort((a, b) => a.name.localeCompare(b.name));
