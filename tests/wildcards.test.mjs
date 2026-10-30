@@ -7,7 +7,7 @@ beforeEach(reset);
 async function open(path = 'tokens/*.webp', files = ['tokens/a.webp', 'tokens/b.webp']) {
     const owner = actor('scout', path);owner.prototypeToken.randomImg = true;
     listing('data', path.split('?')[0], files, true);
-    const app = new AssetFilepaths();app.singularType = 'PrototypeToken';await app.render();
+    const app = new AssetFilepaths();app.singularType = 'PrototypeToken';await app.render();await app._scanPromise;
     return {app, owner, row: app.element.querySelector('.asset-row'), entry: app.context.assets[0].assets[0]};
 }
 
