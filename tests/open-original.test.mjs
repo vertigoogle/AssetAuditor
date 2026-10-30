@@ -32,7 +32,7 @@ const {AssetFilepaths} = await import("../src/apps/asset-filepaths.js");
 beforeEach(() => {
     opened = [];notifications = [];
     const actors = [];
-    globalThis.game = {actors, collections: new Map([["Actor", actors]]), i18n: {localize: key => key}};
+    globalThis.game = {actors, collections: new Map([["Actor", actors]]), i18n: {localize: key => key, format: key => key}};
     globalThis.ui = {notifications: {error: message => notifications.push(message)}};
 });
 // Explicit globals are required by Foundry's browser modules.
@@ -88,6 +88,10 @@ test("navigation selects the right document when names match", async () => {
     for (const actor of actors) { actor.img = 'images/missing.webp';actor.sheet = sheet(actor);game.actors.push(actor); }
     const app = new AssetFilepaths();app.singularType = 'Actor';
     await (app._prepareContext ? app._prepareContext() : app.getData());
+    if (app.scanAssets) {
+        await app.scanAssets();
+        await (app._prepareContext ? app._prepareContext() : app.getData());
+    }
     const click = bind(app);
     const button = {dataset: {assetId: 'two', assetType: 'Actor'}, disabled: false};
     await click({currentTarget: button});
