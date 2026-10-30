@@ -19,7 +19,11 @@ class Config {
 }
 class PrototypeTokenConfig extends Config {}
 class PlaylistSoundConfig extends Config {}
-globalThis.foundry = {data: {PrototypeToken}, applications: {sheets: {PrototypeTokenConfig, PlaylistSoundConfig}}};
+class ApplicationV2Stub { async _prepareContext() { return {}; } _onRender() {} }
+globalThis.foundry = {data: {PrototypeToken}, applications: {
+    sheets: {PrototypeTokenConfig, PlaylistSoundConfig},
+    api: {ApplicationV2: ApplicationV2Stub, HandlebarsApplicationMixin: Base => class extends Base {}}
+}};
 globalThis.Application = class { async getData() { return {}; } activateListeners() {} };
 globalThis.FilePicker = {async browse() { return {files: []}; }};
 globalThis.navigator ??= {};
@@ -83,7 +87,7 @@ test("navigation selects the right document when names match", async () => {
     const actors = [new Actor('one'), new Actor('two')];
     for (const actor of actors) { actor.img = 'images/missing.webp';actor.sheet = sheet(actor);game.actors.push(actor); }
     const app = new AssetFilepaths();app.singularType = 'Actor';
-    await app.getData();
+    await (app._prepareContext ? app._prepareContext() : app.getData());
     const click = bind(app);
     const button = {dataset: {assetId: 'two', assetType: 'Actor'}, disabled: false};
     await click({currentTarget: button});
