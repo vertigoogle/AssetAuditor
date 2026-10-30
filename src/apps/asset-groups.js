@@ -3,7 +3,9 @@ export function groupAssetRows(root, format, getSavedPath) {
     if (!root?.querySelectorAll) return;
     const Observer = root.ownerDocument.defaultView.MutationObserver;
     const options = {childList: true, subtree: true, attributes: true, attributeFilter: ["disabled"]};
-    const observer = new Observer(reconcile);
+    const observer = new Observer(records => {
+        if (records.some(record => record.target.closest?.('.asset-type-group'))) reconcile();
+    });
 
     function reconcile() {
         observer.disconnect();
