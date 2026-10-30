@@ -377,7 +377,7 @@ async function assetPointerToObject(asset, fileCache) {
         return null;
     }
     const path = getAssetPath(asset);
-    if (!path || path.startsWith("icons/")) {
+    if (!path) {
         return null;
     }
     const type = asset.constructor.name;

@@ -45,3 +45,19 @@ test("wildcards resolve in Core Data and stay invalid without matches", async ()
     listings.clear();
     assert.equal((await scan()).isValid, false);
 });
+
+test("built-in icons are audited through Core Data and missing icons remain visible", async () => {
+    setup("sounds/dice.wav", [["public:icons:false", ["icons/existing.svg"]]]);
+    const existing = Object.assign(new Actor(), {_id: "existing", name: "Existing", img: "icons/existing.svg"});
+    const missing = Object.assign(new Actor(), {_id: "missing", name: "Missing", img: "icons/missing.svg"});
+    game.collections.get("Actor").push(existing, missing);
+    const groups = await aggregation.getAllAssets(false, "", "Actor");
+    assert.equal(groups[0].assets.length, 2);
+    assert.equal(groups[0].assets.find(entry => entry.asset === existing).isValid, true);
+    const invalid = (await aggregation.getAllAssets(true, "", "Actor"))[0].assets;
+    assert.equal(invalid.length, 1);
+    assert.equal(invalid[0].asset, missing);
+    assert.equal(invalid[0].lastValidPath, "icons");
+    assert.equal(existing.img, "icons/existing.svg");
+    assert.equal(missing.img, "icons/missing.svg");
+});
