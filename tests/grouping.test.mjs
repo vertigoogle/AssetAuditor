@@ -4,7 +4,7 @@ import {reset, actor, env, AssetFilepaths, waitFor} from './helpers/foundry.mjs'
 beforeEach(reset);
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 async function open(type = 'Actor') {
-    const app = new AssetFilepaths();app.singularType = type;await app.render();
+    const app = new AssetFilepaths();app.singularType = type;await app.render();await app._scanPromise;
     return app;
 }
 const groups = app => [...app.element.querySelectorAll('.asset-path-group')];
@@ -119,4 +119,10 @@ test('closing the window disconnects the grouping observer', async t => {
     try { await app.close(); } finally { delete Application.prototype.close; }
     assert.equal(spy.mock.calls.length, 1);
     assert.equal(app.element.isConnected, false);
+});
+
+test('unrelated toolbar updates preserve a group that the user collapsed', async () => {
+    actor();const app = await open();const group = groups(app)[0];group.open = false;
+    const search = app.element.querySelector('.search-input');search.value = 'draft search';search.dispatchEvent(new window.Event('input'));
+    await flush();assert.equal(group.open, false);
 });
