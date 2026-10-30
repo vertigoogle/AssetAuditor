@@ -1,4 +1,3 @@
-import {readFile} from "node:fs/promises";
 import {test, beforeEach} from "node:test";
 import assert from "node:assert/strict";
 
@@ -16,11 +15,7 @@ class PrototypeToken { constructor(data) { Object.assign(this, data); } }
 globalThis.foundry = {data: {PrototypeToken}};
 globalThis.navigator ??= {};
 globalThis.FilePicker = {async browse() { return {files: ["images/portrait.webp"]}; }};
-const moduleURL = source => `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
-const identity = moduleURL(await readFile(new URL("../src/scripts/asset-identity.js", import.meta.url), "utf8"));
-const source = (await readFile(new URL("../src/scripts/asset-aggregation.js", import.meta.url), "utf8"))
-    .replace('"./asset-identity.js"', JSON.stringify(identity));
-const {getAllAssets, setAssetPath} = await import(moduleURL(source));
+const {getAllAssets, setAssetPath} = await import("../src/scripts/asset-aggregation.js");
 
 beforeEach(() => {
     const collections = new Map(["Actor", "JournalEntry", "Playlist", "Scene", "User"].map(name => [name, []]));
