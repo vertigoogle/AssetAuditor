@@ -19,6 +19,7 @@ test('identical paths collapse into one group while individual rows stay editabl
     assert.equal(shared.open, false);
     assert.equal(shared.querySelectorAll('.asset-row').length, 2);
     assert.match(shared.querySelector('summary').textContent, /2 usages/);
+    assert(shared.querySelector('summary').textContent.includes(String.fromCodePoint(0x2014)));
     assert.equal(unique.open, true);
     assert.equal(app.element.querySelectorAll('.path-input').length, 3);
     assert.equal(env.updates.length, 0);
