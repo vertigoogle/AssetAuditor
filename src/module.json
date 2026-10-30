@@ -11,7 +11,7 @@
   "version": "2.0.3",
   "compatibility": {
     "minimum": "13",
-		"verified": "14"
+    "verified": "14"
   },
   "esmodules": [
     "scripts/main.js"
@@ -33,5 +33,8 @@
   "download": "https://github.com/TheComamba/AssetAuditor/archive/refs/tags/v2.0.3.zip",
   "bugs": "https://github.com/TheComamba/AssetAuditor/issues",
   "readme": "https://github.com/TheComamba/AssetAuditor/blob/v2.0.3/README.md",
-  "styles": ["styles/asset-filepaths.css"]
+  "styles": [
+    "styles/asset-filepaths.css",
+    "styles/asset-scan.css"
+  ]
 }
